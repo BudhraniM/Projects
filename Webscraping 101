@@ -1,0 +1,88 @@
+#import libraries
+from bs4 import BeautifulSoup as BS
+import requests
+import time
+import datetime
+import csv
+import pandas as pd
+import smtplib
+
+# website connection, headers from: http://httpbin.org/get (user agent)
+url = 'https://www.amazon.com/dp/B07PH1SX4J/ref=sspa_dk_detail_0?psc=1&pd_rd_i=B07PH1SX4J&pd_rd_w=U50cB&pf_rd_p=5d846283-ed3e-4512-a744-a30f97c5d738&pd_rd_wg=mDwQ1&pf_rd_r=R309Q37MVCAM00EBEJHQ&pd_rd_r=679d51f1-e6f6-4cc5-a521-2037daf92fac&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUEyT0FVVUdST1BERTAmZW5jcnlwdGVkSWQ9QTA5ODM1ODYyWDlLWFlLMUdZSk9CJmVuY3J5cHRlZEFkSWQ9QTAzMTA1NzEyRkE5TFpVRFlGUU9LJndpZGdldE5hbWU9c3BfZGV0YWlsX3RoZW1hdGljJmFjdGlvbj1jbGlja1JlZGlyZWN0JmRvTm90TG9nQ2xpY2s9dHJ1ZQ==' 
+headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0", "Accept-Encoding":"gzip, deflate", "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "DNT":"1","Connection":"close", "Upgrade-Insecure-Requests":"1"}
+
+page = requests.get(url, headers = headers)
+
+soup1 =  BS(page.content, "html.parser")
+soup2 = BS(soup1.prettify(), "html.parser" )
+
+title = soup2.find(id = 'productTitle').get_text()
+price = soup2.find(id = 'priceblock_ourprice').get_text()
+
+price = price.strip()[1:]
+title = title.strip()
+
+import datetime
+today = datetime.date.today()
+
+#Table creation
+header = ['Title', 'Price', 'Data']
+data = [title, price, today]
+#comment this part out after first run:
+#with open('file name.csv', 'w', newline = '', encoding='UTF8') as f:
+    #writer = csv.writer(f)
+    #writer.writerow(header)
+    #writer.writerow(data)
+df = pd.read_csv(r'C:\Users\xxxxxx\Desktop\Personal Improvement\filename.csv')
+
+def send_mail():
+    server = smtplib.SMTP_SSL('smtp.gmail.com',465)
+    server.ehlo()
+    #server.starttls()
+    server.ehlo()
+    server.login('bxxxxxxxxx@gmail.com','xxxxxxxxxxxxxx')
+    
+    subject = "The Shirt you want is below $15! Now is your chance to buy!"
+    body = "This is the moment we have been waiting for. Now is your chance to pick up the shirt of your dreams. Don't mess it up! Link here: https://www.amazon.com/Funny-Data-Systems-Business-Analyst/dp/B07FNW9FGJ/ref=sr_1_3?dchild=1&keywords=data+analyst+tshirt&qid=1626655184&sr=8-3"
+   
+    msg = f"Subject: {subject}\n\n{body}"
+    
+    server.sendmail(
+        'bxxxxxxxxxx@gmail.com',
+        msg
+     
+    )
+
+def check_price():
+    url = 'https://www.amazon.com/dp/B07PH1SX4J/ref=sspa_dk_detail_0?psc=1&pd_rd_i=B07PH1SX4J&pd_rd_w=U50cB&pf_rd_p=5d846283-ed3e-4512-a744-a30f97c5d738&pd_rd_wg=mDwQ1&pf_rd_r=R309Q37MVCAM00EBEJHQ&pd_rd_r=679d51f1-e6f6-4cc5-a521-2037daf92fac&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUEyT0FVVUdST1BERTAmZW5jcnlwdGVkSWQ9QTA5ODM1ODYyWDlLWFlLMUdZSk9CJmVuY3J5cHRlZEFkSWQ9QTAzMTA1NzEyRkE5TFpVRFlGUU9LJndpZGdldE5hbWU9c3BfZGV0YWlsX3RoZW1hdGljJmFjdGlvbj1jbGlja1JlZGlyZWN0JmRvTm90TG9nQ2xpY2s9dHJ1ZQ==' 
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0", "Accept-Encoding":"gzip, deflate", "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "DNT":"1","Connection":"close", "Upgrade-Insecure-Requests":"1"}
+
+    page = requests.get(url, headers = headers)
+
+    soup1 =  BS(page.content, "html.parser")
+    soup2 = BS(soup1.prettify(), "html.parser" )
+
+    title = soup2.find(id = 'productTitle').get_text()
+    price = soup2.find(id = 'priceblock_ourprice').get_text()
+    
+    price = price.strip()[1:]
+    title = title.strip()
+   
+    import datetime
+    today = datetime.date.today()
+    
+    import csv
+    header = ['Title', 'Price', 'Data']
+    data = [title, price, today]
+    with open('filename.csv', 'a+', newline = '', encoding='UTF8') as f:
+        writer = csv.writer(f)
+        writer.writerow(data)
+    if (price < 14):
+        send_mail()
+				
+while(True):
+    check_price()
+    time.sleep(86400) #checks price every day
+
+
+print (df)
